@@ -1,21 +1,19 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Imposter Spiel</title>
-<link rel="manifest" href="manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker registriert'))
-      .catch(err => console.error('Service Worker Fehler:', err));
-    });
-  }
-</script>
-
-
-
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registriert'))
+        .catch(err => console.error('Service Worker Fehler:', err));
+      });
+    }
+  </script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -75,7 +73,6 @@
       margin-top: 30px;
       width: 320px;
     }
-
   </style>
 </head>
 <body>
@@ -95,22 +92,20 @@
     <button onclick="initPlayers()">Spieler erstellen</button>
     <div id="playerList"></div>
     <button class="hidden" id="startBtn" onclick="prepareGame()">Spiel starten</button>
+    <button class="hidden" id="resetBtn" onclick="resetGame()">Spiel zurücksetzen</button>
   </div>
 
-  <!-- Nächster Spieler Screen -->
   <div id="nextPlayerScreen" class="hidden">
     <h2 id="nextPlayerHeader"></h2>
     <button onclick="showPlayerCard()">Bereit</button>
   </div>
 
-  <!-- Rollenanzeige -->
   <div id="card" class="hidden">
     <h2 id="playerTitle"></h2>
     <p id="roleText"></p>
     <button onclick="goToNextPlayer()">Weiter</button>
   </div>
 
-  <!-- Startspieler-Anzeige -->
   <div id="startAnnouncement" class="hidden">
     <h2>Alle Rollen wurden verteilt!</h2>
     <p id="starterText"></p>
@@ -118,6 +113,8 @@
   </div>
 
   <script>
+
+    
 const wordPairs = [
   ["Apfel", "Essen"],
   ["Buch", "Gegenstand"],
@@ -342,6 +339,7 @@ const wordPairs = [
       }
 
       document.getElementById("startBtn").classList.remove("hidden");
+      document.getElementById("resetBtn").classList.add("hidden");
     }
 
     function prepareGame() {
@@ -370,12 +368,13 @@ const wordPairs = [
       currentPlayerIndex = 0;
 
       document.getElementById("setup").classList.add("hidden");
+      document.getElementById("resetBtn").classList.remove("hidden");
       showNextPlayerScreen();
     }
 
     function showNextPlayerScreen() {
       const player = gameData[currentPlayerIndex];
-    document.getElementById("nextPlayerHeader").innerText = `${player.name} ist als nächstes dran.`;
+      document.getElementById("nextPlayerHeader").innerText = `${player.name} ist als nächstes dran.`;
       document.getElementById("nextPlayerScreen").classList.remove("hidden");
     }
 
@@ -401,7 +400,6 @@ const wordPairs = [
     }
 
     function showStartPlayer() {
-      // Gewichtete Auswahl: Crew hat 3x so viel Chance wie Imposter
       const pool = [];
       gameData.forEach((player, index) => {
         const weight = player.role === "Imposter" ? 1 : 3;
@@ -415,6 +413,23 @@ const wordPairs = [
 
       document.getElementById("starterText").innerText = `Zufällig ausgewählt: ${startPlayer.name} beginnt mit dem ersten Hinweis.`;
       document.getElementById("startAnnouncement").classList.remove("hidden");
+    }
+
+    function resetGame() {
+      document.getElementById("nextPlayerScreen").classList.add("hidden");
+      document.getElementById("card").classList.add("hidden");
+      document.getElementById("startAnnouncement").classList.add("hidden");
+      document.getElementById("setup").classList.remove("hidden");
+
+      gameData = [];
+      currentPlayerIndex = 0;
+
+      const container = document.getElementById("playerList");
+      const inputs = container.querySelectorAll("input");
+      players = Array.from(inputs);
+
+      document.getElementById("startBtn").classList.remove("hidden");
+      document.getElementById("resetBtn").classList.add("hidden");
     }
   </script>
 </body>
