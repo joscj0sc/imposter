@@ -24,23 +24,19 @@
       align-items: center;
       padding: 40px;
     }
-
     h1, h2 {
       color: #2c3e50;
     }
-
     label {
       display: block;
       margin: 10px 0 5px;
     }
-
     input[type="number"], input[type="text"] {
       padding: 8px;
       width: 200px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
     button {
       padding: 10px 20px;
       margin-top: 20px;
@@ -50,19 +46,15 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #2980b9;
     }
-
     .player-input {
       margin-bottom: 5px;
     }
-
     .hidden {
       display: none;
     }
-
     #card, #nextPlayerScreen, #startAnnouncement {
       border: 2px solid #2c3e50;
       background-color: #fff;
@@ -82,18 +74,17 @@
     <label>Anzahl Spieler:
       <input type="number" id="playerCount" min="3" max="20" value="4">
     </label>
-
     <label>Anzahl Imposter:
       <input type="number" id="imposterCount" min="1" value="1">
     </label>
-
     <label><input type="checkbox" id="useHint" checked> Hinweiswort verwenden</label>
-
     <button onclick="initPlayers()">Spieler erstellen</button>
     <div id="playerList"></div>
     <button class="hidden" id="startBtn" onclick="prepareGame()">Spiel starten</button>
-    <button class="hidden" id="resetBtn" onclick="resetGame()">Spiel zurücksetzen</button>
   </div>
+
+  <!-- Reset-Button jetzt außerhalb von #setup, damit er immer angezeigt werden kann -->
+  <button class="hidden" id="resetBtn" onclick="resetGame()">Spiel zurücksetzen</button>
 
   <div id="nextPlayerScreen" class="hidden">
     <h2 id="nextPlayerHeader"></h2>
@@ -113,8 +104,7 @@
   </div>
 
   <script>
-
-    
+   
 const wordPairs = [
   ["Apfel", "Essen"],
   ["Buch", "Gegenstand"],
@@ -318,13 +308,12 @@ const wordPairs = [
   ["Topf", "Objekt"]
 ];
 
-
     let players = [];
     let gameData = [];
     let currentPlayerIndex = 0;
 
     function initPlayers() {
-      const count = parseInt(document.getElementById("playerCount").value);
+      const count = parseInt(document.getElementById("playerCount").value, 10);
       const container = document.getElementById("playerList");
       container.innerHTML = "";
       players = [];
@@ -343,8 +332,8 @@ const wordPairs = [
     }
 
     function prepareGame() {
-      const names = players.map(input => input.value || `Spieler ${Math.random().toFixed(3)}`);
-      const imposterCount = parseInt(document.getElementById("imposterCount").value);
+      const names = players.map(input => input.value.trim() || `Spieler ${Math.random().toFixed(3)}`);
+      const imposterCount = parseInt(document.getElementById("imposterCount").value, 10);
       const useHint = document.getElementById("useHint").checked;
 
       if (imposterCount >= names.length) {
@@ -352,29 +341,36 @@ const wordPairs = [
         return;
       }
 
-      const wordPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
-      const crewWord = wordPair[0];
-      const hintWord = wordPair[1];
+      // Wort-Paar wählen
+      const [crewWord, hintWord] = wordPairs[Math.floor(Math.random() * wordPairs.length)];
 
-      const shuffled = names.map(name => ({ name, role: "Crew", word: crewWord }));
-      shuffled.sort(() => Math.random() - 0.5);
+      // 1) Rollen zuweisen in Namens-Reihenfolge
+      const assigned = names.map((name, i) => ({
+        name,
+        role: i < imposterCount ? "Imposter" : "Crew",
+        word: i < imposterCount
+          ? (useHint ? hintWord : null)
+          : crewWord
+      }));
 
-      for (let i = 0; i < imposterCount; i++) {
-        shuffled[i].role = "Imposter";
-        shuffled[i].word = useHint ? hintWord : null;
-      }
+      // 2) gesamte Liste mischen
+      assigned.sort(() => Math.random() - 0.5);
 
-      gameData = shuffled;
+      gameData = assigned;
       currentPlayerIndex = 0;
 
+      // UI anpassen
       document.getElementById("setup").classList.add("hidden");
+      document.getElementById("startBtn").classList.add("hidden");
       document.getElementById("resetBtn").classList.remove("hidden");
+
       showNextPlayerScreen();
     }
 
     function showNextPlayerScreen() {
       const player = gameData[currentPlayerIndex];
-      document.getElementById("nextPlayerHeader").innerText = `${player.name} ist als nächstes dran.`;
+      document.getElementById("nextPlayerHeader").innerText =
+        `${player.name} ist als nächstes dran.`;
       document.getElementById("nextPlayerScreen").classList.remove("hidden");
     }
 
@@ -382,10 +378,13 @@ const wordPairs = [
       const player = gameData[currentPlayerIndex];
       document.getElementById("nextPlayerScreen").classList.add("hidden");
       document.getElementById("card").classList.remove("hidden");
-      document.getElementById("playerTitle").innerText = `Rolle für ${player.name}`;
+      document.getElementById("playerTitle").innerText =
+        `Rolle für ${player.name}`;
       document.getElementById("roleText").innerText =
         player.role === "Imposter"
-          ? (player.word ? `Du bist der Imposter.\nHinweiswort: ${player.word}` : "Du bist der Imposter.")
+          ? (player.word
+              ? `Du bist der Imposter.\nHinweiswort: ${player.word}`
+              : "Du bist der Imposter.")
           : `Dein Wort: ${player.word}`;
     }
 
@@ -400,36 +399,34 @@ const wordPairs = [
     }
 
     function showStartPlayer() {
+      // Gewichtete Auswahl: Crew 3×, Imposter 1×
       const pool = [];
-      gameData.forEach((player, index) => {
+      gameData.forEach((player, idx) => {
         const weight = player.role === "Imposter" ? 1 : 3;
-        for (let i = 0; i < weight; i++) {
-          pool.push(index);
-        }
+        for (let i = 0; i < weight; i++) pool.push(idx);
       });
-
       const randomIndex = pool[Math.floor(Math.random() * pool.length)];
-      const startPlayer = gameData[randomIndex];
+      const starter = gameData[randomIndex];
 
-      document.getElementById("starterText").innerText = `Zufällig ausgewählt: ${startPlayer.name} beginnt mit dem ersten Hinweis.`;
+      document.getElementById("starterText").innerText =
+        `Zufällig ausgewählt: ${starter.name} beginnt mit dem ersten Hinweis.`;
       document.getElementById("startAnnouncement").classList.remove("hidden");
     }
 
     function resetGame() {
+      // Alle Screens ausblenden
       document.getElementById("nextPlayerScreen").classList.add("hidden");
       document.getElementById("card").classList.add("hidden");
       document.getElementById("startAnnouncement").classList.add("hidden");
+
+      // Setup wieder anzeigen
       document.getElementById("setup").classList.remove("hidden");
-
-      gameData = [];
-      currentPlayerIndex = 0;
-
-      const container = document.getElementById("playerList");
-      const inputs = container.querySelectorAll("input");
-      players = Array.from(inputs);
-
       document.getElementById("startBtn").classList.remove("hidden");
       document.getElementById("resetBtn").classList.add("hidden");
+
+      // Spielzustand leeren
+      gameData = [];
+      currentPlayerIndex = 0;
     }
   </script>
 </body>
