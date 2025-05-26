@@ -359,7 +359,24 @@ function prepareGame() {
         `${player.name} ist als nächstes dran.`;
       document.getElementById("nextPlayerScreen").classList.remove("hidden");
     }
+    function initPlayers() {
+      const count = parseInt(document.getElementById("playerCount").value, 10);
+      const container = document.getElementById("playerList");
+      container.innerHTML = "";
+      players = [];
 
+      for (let i = 0; i < count; i++) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = `Spieler ${i + 1}`;
+        input.classList.add("player-input");
+        container.appendChild(input);
+        players.push(input);
+      }
+
+      document.getElementById("startBtn").classList.remove("hidden");
+      document.getElementById("resetBtn").classList.add("hidden");
+    }
     function showPlayerCard() {
       const player = gameData[currentPlayerIndex];
       document.getElementById("nextPlayerScreen").classList.add("hidden");
