@@ -313,61 +313,45 @@ const wordPairs = [
     let gameData = [];
     let currentPlayerIndex = 0;
 
-    function initPlayers() {
-      const count = parseInt(document.getElementById("playerCount").value, 10);
-      const container = document.getElementById("playerList");
-      container.innerHTML = "";
-      players = [];
 
-      for (let i = 0; i < count; i++) {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.placeholder = `Spieler ${i + 1}`;
-        input.classList.add("player-input");
-        container.appendChild(input);
-        players.push(input);
-      }
+function prepareGame() {
+  const names = players.map(input => input.value.trim() || `Spieler ${Math.random().toFixed(3)}`);
+  const imposterCount = parseInt(document.getElementById("imposterCount").value, 10);
+  const useHint = document.getElementById("useHint").checked;
 
-      document.getElementById("startBtn").classList.remove("hidden");
-      document.getElementById("resetBtn").classList.add("hidden");
-    }
+  if (imposterCount >= names.length) {
+    alert("Zu viele Imposter!");
+    return;
+  }
 
-    function prepareGame() {
-      const names = players.map(input => input.value.trim() || `Spieler ${Math.random().toFixed(3)}`);
-      const imposterCount = parseInt(document.getElementById("imposterCount").value, 10);
-      const useHint = document.getElementById("useHint").checked;
+  // Schritt 1: Namen mischen
+  const shuffledNames = [...names].sort(() => Math.random() - 0.5);
 
-      if (imposterCount >= names.length) {
-        alert("Zu viele Imposter!");
-        return;
-      }
+  // Schritt 2: Wort-Paar wählen
+  const [crewWord, hintWord] = wordPairs[Math.floor(Math.random() * wordPairs.length)];
 
-      // Wort-Paar wählen
-      const [crewWord, hintWord] = wordPairs[Math.floor(Math.random() * wordPairs.length)];
-assigned.sort(() => Math.random() - 0.5);
+  // Schritt 3: Rollen zuweisen
+  const assigned = shuffledNames.map((name, i) => ({
+    name,
+    role: i < imposterCount ? "Imposter" : "Crew",
+    word: i < imposterCount
+      ? (useHint ? hintWord : null)
+      : crewWord
+  }));
 
-      // 1) Rollen zuweisen in Namens-Reihenfolge
-      const assigned = names.map((name, i) => ({
-        name,
-        role: i < imposterCount ? "Imposter" : "Crew",
-        word: i < imposterCount
-          ? (useHint ? hintWord : null)
-          : crewWord
-      }));
+  // Schritt 4: Nochmals mischen
+  assigned.sort(() => Math.random() - 0.5);
 
-      // 2) gesamte Liste mischen
-      assigned.sort(() => Math.random() - 0.5);
+  gameData = assigned;
+  currentPlayerIndex = 0;
 
-      gameData = assigned;
-      currentPlayerIndex = 0;
+  // UI anpassen
+  document.getElementById("setup").classList.add("hidden");
+  document.getElementById("startBtn").classList.add("hidden");
+  document.getElementById("resetBtn").classList.remove("hidden");
 
-      // UI anpassen
-      document.getElementById("setup").classList.add("hidden");
-      document.getElementById("startBtn").classList.add("hidden");
-      document.getElementById("resetBtn").classList.remove("hidden");
-
-      showNextPlayerScreen();
-    }
+  showNextPlayerScreen();
+}
 
     function showNextPlayerScreen() {
       const player = gameData[currentPlayerIndex];
