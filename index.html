@@ -344,6 +344,7 @@ const wordPairs = [
 
       // Wort-Paar wählen
       const [crewWord, hintWord] = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+assigned.sort(() => Math.random() - 0.5);
 
       // 1) Rollen zuweisen in Namens-Reihenfolge
       const assigned = names.map((name, i) => ({
