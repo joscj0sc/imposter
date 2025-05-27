@@ -319,7 +319,7 @@ function prepareGame() {
   const imposterCount = parseInt(document.getElementById("imposterCount").value, 10);
   const useHint = document.getElementById("useHint").checked;
 
-  if (imposterCount >= names.length) {
+  if (imposterCount > names.length) {
     alert("Zu viele Imposter!");
     return;
   }
